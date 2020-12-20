@@ -11,36 +11,39 @@ const FILES_TO_CACHE = [
     "/icons/icon-512x512.png"
 ];
 //install
-self.addEventListener("install", (evt) => {
-    evt.waitUntil(
+self.addEventListener("install", (e) => {
+    e.waitUntil(
         caches
             .open(DATA_CACHE_NAME)
             .then(cache => cache.addAll(FILES_TO_CACHE))
             .then(() => self.skipWaiting())
     );
 });
-self.addEventListener('fetch', function (evt) {
-    if (evt.request.url.includes("/api/")) {
-        evt.respondWith(
-            caches.open(DATA_CACHE_NAME).then(cache => {
-                return fetch(evt.request)
+// fetch
+self.addEventListener('fetch', function (e) {
+    if (e.request.url.includes("/api/")) {
+        e.respondWith(
+            caches.open(DATA_CACHE_NAME)
+            .then(cache => {
+                return fetch(e.request)
                     .then(response => {
                         if (response.status === 200) {
-                            cache.put(evt.request.url, response.clone());
+                            cache.put(e.request.url, response.clone());
                         }
                         return response;
                     })
                     .catch(err => {
-                        return cache.match(evt.request);
+                        return cache.match(e.request);
                     });
             }).catch(err => console.log(err))
         );
         return;
     }
-    evt.respondWith(
-        caches.open(CACHE_NAME).then(cache => {
-            return cache.match(evt.request).then(response => {
-                return response || fetch(evt.request);
+    e.respondWith(
+        caches.open(CACHE_NAME)
+        .then(cache => {
+            return cache.match(e.request).then(response => {
+                return response || fetch(e.request);
             });
         })
     );
